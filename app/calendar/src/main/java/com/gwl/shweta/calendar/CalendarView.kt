@@ -50,7 +50,8 @@ class CalendarView : LinearLayout {
     constructor(context: Context?) : super(context)
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-        initControl(context, attrs)
+        loadDateFormat(attrs)
+        initControl(context)
     }
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -58,7 +59,8 @@ class CalendarView : LinearLayout {
         attrs,
         defStyleAttr
     ) {
-        initControl(context, attrs)
+        loadDateFormat(attrs)
+        initControl(context)
     }
     // endregion
 
@@ -66,10 +68,10 @@ class CalendarView : LinearLayout {
     /**
      * Load control xml layout
      */
-    private fun initControl(context: Context, attrs: AttributeSet?) {
+    private fun initControl(context: Context) {
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         inflater.inflate(R.layout.control_calendar, this)
-        loadDateFormat(attrs)
+        //loadDateFormat(attrs)
         assignUiElements()
         assignClickHandlers()
     }
@@ -158,24 +160,14 @@ class CalendarView : LinearLayout {
         grid?.also {
             it.onItemClickListener =
                 AdapterView.OnItemClickListener { view, cell, position, _ -> // handle long-press
-                    val date =view.getItemAtPosition(position) as Date
+                    val date = view.getItemAtPosition(position) as Date
+                    val today = Date()
                     if (selectedDates.contains(date)) {
                         selectedDates.remove(date)
-                    }
-                     else{
+                    } else if (isDisableNextMonthDate && date.after(today)) {
                         selectedDates.add(date)
                     }
                     calendarAdapter?.notifyDataSetChanged()
-/*
-                    if (eventHandler == null) return@OnItemClickListener
-                    if (!cell.findViewById<TextView>(R.id.itemTv).isEnabled) return@OnItemClickListener
-                    else {
-                        eventHandler?.also {
-                            it.onDayPress(view.getItemAtPosition(position) as Date)
-                        }
-                        calendarAdapter?.setSelectedPosition(position)
-                        calendarAdapter?.notifyDataSetChanged()
-                    }*/
                     true
                 }
         }
@@ -188,6 +180,9 @@ class CalendarView : LinearLayout {
         eventsList = events
     }
 
+    fun  getSelectedDates(): ArrayList<Date> {
+        return selectedDates
+    }
 
     /**
      * Set future dates
@@ -222,7 +217,8 @@ class CalendarView : LinearLayout {
 
         // update grid
         calendarAdapter = CalendarAdapter(context, cells, eventsList)
-        grid?.also { it.adapter = calendarAdapter
+        grid?.also {
+            it.adapter = calendarAdapter
         }
         // update title
         val sdf = SimpleDateFormat(dateFormat)
@@ -385,4 +381,57 @@ class CalendarView : LinearLayout {
         // default date format
         private const val DATE_FORMAT = "MMM yyyy"
     }
+
+    public class CalendarBuilder {
+        private var calendarView: CalendarView? = null;
+
+        constructor(context: Context, calendarView: CalendarView) {
+            this.calendarView = calendarView
+            calendarView.dateFormat = CalendarView.DATE_FORMAT
+            calendarView.monthColor = ContextCompat.getColor(context, R.color.white)
+            calendarView.colorDays = ContextCompat.getColor(context, R.color.white)
+            calendarView.colorDates = ContextCompat.getColor(context, R.color.white)
+            calendarView.disableColorDates = ContextCompat.getColor(context, R.color.white)
+            calendarView.selectedColorDates = ContextCompat.getColor(context, R.color.white)
+        }
+
+        constructor(context: Context) : this(context, CalendarView(context)) {
+        }
+
+        fun setDateFormat(dateFormat: String): CalendarBuilder {
+            calendarView?.dateFormat = dateFormat
+            return this;
+        }
+
+        fun setMonthHeaderColor(monthColor: Int): CalendarBuilder {
+            calendarView?.monthColor = monthColor
+            return this
+        }
+
+        fun setDaysColor(daysColor: Int): CalendarBuilder {
+            calendarView?.colorDays = daysColor
+            return this
+        }
+
+        fun setDatesColor(datesColor: Int): CalendarBuilder {
+            calendarView?.colorDates = datesColor
+            return this
+        }
+
+        fun setDisabledDatesColor(disabledColorDates: Int): CalendarBuilder {
+            calendarView?.disableColorDates = disabledColorDates
+            return this
+        }
+
+        fun setSelectedDatesColor(selectedDatesColor: Int): CalendarBuilder {
+            calendarView?.selectedColorDates = selectedDatesColor
+            return this
+        }
+
+        fun build(): CalendarView? {
+            calendarView?.assignUiElements()
+            return calendarView
+        }
+    }
 }
+
