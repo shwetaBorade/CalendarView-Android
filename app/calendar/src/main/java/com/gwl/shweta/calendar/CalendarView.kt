@@ -329,11 +329,11 @@ class CalendarView : LinearLayout {
                     }
 
                 } else {
-                    if (isDisableNextMonthDate) {
+                    if (isDisableNextMonthDate || date.before(today)) {
                         textView.setTextColor(disableColorDates)
                         textView.isEnabled = false
                     } else {
-                        if (date.before(today)) {
+                        if (date.after(today)) {
                             textView.setTextColor(
                                 ContextCompat.getColor(
                                     context,
@@ -350,10 +350,10 @@ class CalendarView : LinearLayout {
                 // set text
                 textView.text = mCalender.get(Calendar.DATE).toString()
                 if (selectedDates.contains(date)) {
-                    view?.setBackgroundResource(R.drawable.custom_circle)
+                    showView?.setBackgroundResource(R.drawable.custom_circle)
                     textView.setTextColor(selectedColorDates)
                 } else {
-                    view?.setBackgroundResource(0)
+                    showView?.setBackgroundResource(0)
                 }
 
             }
